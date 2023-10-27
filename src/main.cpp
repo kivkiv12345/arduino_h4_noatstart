@@ -11,7 +11,10 @@
 #endif
  
 #define USE_SERIAL Serial2
-#define LED 12
+
+#define REDLIGHT_PIN 52
+#define YELLOWLIGHT_PIN 51
+#define GREENLIGHT_PIN 50
  
 #define Display_Attached
 //#define ESP8266
@@ -32,6 +35,8 @@
   #endif
 #endif
 
+
+
 const unsigned long PeriodBeforeShift = 3000;
 
 unsigned long StartMillis;
@@ -41,16 +46,101 @@ unsigned long FunctionPointerTableCounter = 0;
 static volatile bool Interrupt_Occured = false;
 static volatile uint32_t Interrupt_Counter = 0;
 //=======================================================================
-void changeState()
-{
+void changeState(void) {
+
+
+
     digitalWrite(LED, !(digitalRead(LED)));  //Invert Current State of LED
     Interrupt_Occured = true;
     Interrupt_Counter++;
 }
+
+enum light_states_e {
+    RED_LIGHT = 0,
+    REDYELLOW_LIGHT = 1,
+    GREEN_LIGHT = 2,
+    YELLOW_LIGHT = 3,
+};
+
+typedef struct traffic_light_s {
+    int redlight_period = 3;
+    int redyellowlight_period = 2;
+    int greenlight_period = 5;
+    int yellowlight_period = 1;
+
+    light_states_e current_state;
+    int time_in_state;
+} traffic_light_t;
+
+traffic_light_t traffic_light = {
+    .redlight_period = 3,
+    .redyellowlight_period = 2,
+    .greenlight_period = 5,
+    .yellowlight_period = 1,
+};
+
+void light_state_machine(void) {
+
+    traffic_light.time_in_state++;
+    
+    switch (traffic_light.current_state) {
+        case RED_LIGHT:
+            
+            digitalWrite(REDLIGHT_PIN, 1);
+            digitalWrite(YELLOWLIGHT_PIN, 0);
+            digitalWrite(GREENLIGHT_PIN, 0);
+
+            if (traffic_light.time_in_state > traffic_light.redlight_period) {
+                traffic_light.time_in_state = 0;
+                traffic_light.current_state = REDYELLOW_LIGHT;
+            }
+
+            break;
+        case REDYELLOW_LIGHT:
+            
+            digitalWrite(REDLIGHT_PIN, 1);
+            digitalWrite(YELLOWLIGHT_PIN, 1);
+            digitalWrite(GREENLIGHT_PIN, 0);
+
+            if (traffic_light.time_in_state > traffic_light.redyellowlight_period) {
+                traffic_light.time_in_state = 0;
+                traffic_light.current_state = GREEN_LIGHT;
+            }
+
+            break;
+        case GREEN_LIGHT:
+            
+            digitalWrite(REDLIGHT_PIN, 0);
+            digitalWrite(YELLOWLIGHT_PIN, 0);
+            digitalWrite(GREENLIGHT_PIN, 1);
+
+            if (traffic_light.time_in_state > traffic_light.greenlight_period) {
+                traffic_light.time_in_state = 0;
+                traffic_light.current_state = YELLOW_LIGHT;
+            }
+
+            break;
+        
+        default:
+        case YELLOW_LIGHT:
+            
+            digitalWrite(REDLIGHT_PIN, 0);
+            digitalWrite(YELLOWLIGHT_PIN, 1);
+            digitalWrite(GREENLIGHT_PIN, 0);
+
+            if (traffic_light.time_in_state > traffic_light.yellowlight_period) {
+                traffic_light.time_in_state = 0;
+                traffic_light.current_state = RED_LIGHT;
+            }
+
+            break;
+        }
+}
+
+// Ticker Blinker(changeState, 1000);
+Ticker LightTicker(light_state_machine, 1000);
  
-Ticker Blinker(changeState, 1000);
- 
-void ClearScreen()
+void ClearScreen(void)
 {
   display.clearDisplay();
   display.display();
@@ -62,7 +152,7 @@ void ClearScreen()
   printf("ClearDisplay\n");
 }
 
-void WriteText()
+void WriteText(void)
 {
   #ifdef Display_Attached
   display.clearDisplay();
@@ -75,7 +165,7 @@ void WriteText()
   printf("WriteText\n");     
 }
 
-void DraweLine()
+void DraweLine(void)
 {
   #ifdef Display_Attached
   display.clearDisplay();
@@ -88,7 +178,7 @@ void DraweLine()
   printf("Drawline\n");
 }
 
-void DrawRectangle()
+void DrawRectangle(void)
 {
   #ifdef Display_Attached
   display.clearDisplay();
@@ -102,7 +192,7 @@ void DrawRectangle()
   printf("DrawRectangle\n");
 }
 
-void DrawCircle()
+void DrawCircle(void)
 {
   #ifdef Display_Attached
   display.clearDisplay();
@@ -155,7 +245,7 @@ DisplayFunctionPointer DisplayFunctionPointerTable [] =
   &WriteTextTeam
 };
 
-void setup() {
+void setup(void) {
     USE_SERIAL.begin(9600);
 
     #ifdef Display_Attached
@@ -176,10 +266,62 @@ void setup() {
     delay(3000);
     USE_SERIAL.begin(115200);
  
-    Blinker.start();
+    LightTicker.start();
+
+    // initialize digital pin LED_BUILTIN as an output.
+    pinMode(50, OUTPUT);
+    pinMode(51, OUTPUT);
+    pinMode(52, OUTPUT);
 }
- 
-void loop() {
+
+bool isNumeric(const char* s, int len){
+    while(*s && len--){
+        if(*s < '0' || *s > '9')
+            return false;
+        ++s;
+    }
+    return true;
+}
+
+void handle_light_period(void) {
+  int num_chars = USE_SERIAL.available();
+  char buf[4] = {0};
+  buf[4] = '\0';
+  if(num_chars < 3) {
+    return;
+  }
+
+  for (size_t i = 0; i < 3; i++) {
+    buf[i] = USE_SERIAL.read();  // read one byte from serial buffer;
+  }
+
+  if (!isNumeric(&buf[1], 2)) {
+    return;
+  }
+
+  switch (buf[0]) {
+    case '0':
+      traffic_light.redlight_period = atoi(&buf[1]);
+      break;
+    case '1':
+      traffic_light.redyellowlight_period = atoi(&buf[1]);
+      break;
+    case '2':
+      traffic_light.greenlight_period = atoi(&buf[1]);
+      break;
+    case '3':
+      traffic_light.yellowlight_period = atoi(&buf[1]);
+      break;
+    
+    default:
+      break;
+  }
+}
+
+void loop(void) {
+
+    handle_light_period();
+
     CurrentMillis = millis();  //get the current time
   
     if (CurrentMillis - StartMillis >= PeriodBeforeShift) {  //test whether the period has elapsed
@@ -197,9 +339,9 @@ void loop() {
         StartMillis = CurrentMillis;
     }
 
-    Blinker.update();
-    if (Interrupt_Occured)
-    {
+    LightTicker.update();
+    if (Interrupt_Occured) {
+    
         Interrupt_Occured = false;
         USE_SERIAL.print("Interrupt Counter : ");
         USE_SERIAL.println(Interrupt_Counter);
