@@ -945,15 +945,9 @@ void debug_init(void)
 #endif
 
 #if ((AVR8_USE_TIMER0_INSTEAD_OF_WDT == 1) || (AVR8_SWINT_SOURCE == -1)) && (AVR8_BREAKPOINT_MODE != 1)
-	#if defined USE_TIMER2_INSTEAD_OF_TIMER0  // LTPE Modified
-	/* initialize the timer2 OC2A interrupt */
-	OCR2A = 0x7F; /* raise an interrupt between two "millis" interrupts */
- 	TIMSK2 |= _BV(OCIE2A); /* enable the interrupt */
-	#else
-	/* initialize the timer0 OC0A interrupt */
+ 	/* initialize the timer0 OC0A interrupt */
  	OCR0A = 0x7F; /* raise an interrupt between two "millis" interrupts */
- 	TIMSK0 |= _BV(OCIE0A); /* enable the interrupt */ 
-	#endif
+ 	TIMSK0 |= _BV(OCIE0A); /* enable the interrupt */
 #endif
 
 }
@@ -2015,7 +2009,7 @@ ISR(UART_ISR_VECTOR, ISR_BLOCK ISR_NAKED)
 
 	/* Sets interrupt flag = interrupts enabled; but not in real, just in the stored value */
 	/* asm volatile ("ori r29, 0x80");	*/ /* user must see interrupts enabled */
-	/* Disabled - I don't know why the user should see it enabled... */
+	/* Disabled - I don't know why th euser should see it enabled... */
 	save_regs2 ();
 
 	
@@ -2266,12 +2260,7 @@ void debug_message(const char* msg)
  * instead of the separate single-stepping ISR defined above, if AVR8_SWINT_SOURCE == -1 */
 #if ( (AVR8_BREAKPOINT_MODE == 0) || (AVR8_BREAKPOINT_MODE == 2) )	/* code is for flash BP only */
 #if (AVR8_USE_TIMER0_INSTEAD_OF_WDT == 1)
-	#if defined USE_TIMER2_INSTEAD_OF_TIMER0 // LTPE Modified
-	ISR(TIMER2_COMPA_vect, ISR_BLOCK ISR_NAKED)
-	#else
-	ISR(TIMER0_COMPA_vect, ISR_BLOCK ISR_NAKED)
-	#endif
-
+ISR(TIMER0_COMPA_vect, ISR_BLOCK ISR_NAKED)
 #else
 ISR(WDT_vect, ISR_BLOCK ISR_NAKED)
 #endif
