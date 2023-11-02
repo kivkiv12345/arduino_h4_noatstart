@@ -3,3 +3,16 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+*.bin
+*.elf
+*.hex
+*.lss
+*.o
+*.d
+*.map
+*.sym
+.lock*
+.waf*
+
+*.swp

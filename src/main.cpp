@@ -4,140 +4,40 @@
 
 #include <Ticker.h>
 
+#include "utils.hpp"
+#include "dht22.hpp"
+#include "traffic_light.h"
+#include "display.h"
+
 #if defined USE_AVR_DEBUGGER
 #include "avr_debugger.h"
 #include "avr8-stub.h"
 #include "app_api.h"
 #endif
 
-#define USE_SERIAL Serial3
 
-#define REDLIGHT_PIN 52
-#define YELLOWLIGHT_PIN 50
-#define GREENLIGHT_PIN 51
 
-#define BUTTON_INTERRUPT_PIN 3
-
-#define Display_Attached
 // #define ESP8266
 
 #define StopLineCount 30
 
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-
-#define OLED_RESET LED_BUILTIN // 4
-Adafruit_SSD1306 display(OLED_RESET);
 
 #if (SSD1306_LCDHEIGHT != 64)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 #endif
 
+#ifdef CYCLE_DISPLAY
 const unsigned long PeriodBeforeShift = 3000;
-
 unsigned long StartMillis;
 unsigned long CurrentMillis;
 unsigned long FunctionPointerTableCounter = 0;
-
-enum light_states_e
-{
-    RED_LIGHT = 0,
-    REDYELLOW_LIGHT = 1,
-    GREEN_LIGHT = 2,
-    YELLOW_LIGHT = 3,
-};
-
-typedef struct traffic_light_s
-{
-    int redlight_period = 3;
-    int redyellowlight_period = 2;
-    int greenlight_period = 5;
-    int yellowlight_period = 1;
-
-    light_states_e current_state;
-    int time_in_state;
-} traffic_light_t;
-
-traffic_light_t traffic_light = {
-    .redlight_period = 3,
-    .redyellowlight_period = 2,
-    .greenlight_period = 5,
-    .yellowlight_period = 1,
-};
-
-static int interrupt_occurred = 0;
-static void display_irq_cnt(void) {
-    interrupt_occurred = 1;
-}
-
-void light_state_machine(void) {
-    // display_irq_cnt();
-
-    traffic_light.time_in_state++;
-
-    switch (traffic_light.current_state) {
-        case RED_LIGHT:
-
-            digitalWrite(REDLIGHT_PIN, 1);
-            digitalWrite(YELLOWLIGHT_PIN, 0);
-            digitalWrite(GREENLIGHT_PIN, 0);
-
-            if (traffic_light.time_in_state > traffic_light.redlight_period)
-            {
-                traffic_light.time_in_state = 0;
-                traffic_light.current_state = REDYELLOW_LIGHT;
-            }
-
-            break;
-        case REDYELLOW_LIGHT:
-
-            digitalWrite(REDLIGHT_PIN, 1);
-            digitalWrite(YELLOWLIGHT_PIN, 1);
-            digitalWrite(GREENLIGHT_PIN, 0);
-
-            if (traffic_light.time_in_state > traffic_light.redyellowlight_period)
-            {
-                traffic_light.time_in_state = 0;
-                traffic_light.current_state = GREEN_LIGHT;
-            }
-
-            break;
-        case GREEN_LIGHT:
-
-            digitalWrite(REDLIGHT_PIN, 0);
-            digitalWrite(YELLOWLIGHT_PIN, 0);
-            digitalWrite(GREENLIGHT_PIN, 1);
-
-            if (traffic_light.time_in_state > traffic_light.greenlight_period)
-            {
-                traffic_light.time_in_state = 0;
-                traffic_light.current_state = YELLOW_LIGHT;
-            }
-
-            break;
-
-        default:
-        case YELLOW_LIGHT:
-
-            digitalWrite(REDLIGHT_PIN, 0);
-            digitalWrite(YELLOWLIGHT_PIN, 1);
-            digitalWrite(GREENLIGHT_PIN, 0);
-
-            if (traffic_light.time_in_state > traffic_light.yellowlight_period)
-            {
-                traffic_light.time_in_state = 0;
-                traffic_light.current_state = RED_LIGHT;
-            }
-
-            break;
-    }
-}
-
-Ticker LightTicker(light_state_machine, 1000);
+#endif
 
 void ClearScreen(void) {
     display.clearDisplay();
@@ -150,8 +50,9 @@ void ClearScreen(void) {
     printf("ClearDisplay\n");
 }
 
+#ifdef CYCLE_DISPLAY
 void WriteText(void) {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
     // display.setCursor(10,10);
     display.setTextSize(2);
@@ -163,7 +64,7 @@ void WriteText(void) {
 }
 
 void DraweLine(void) {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
 
     display.drawLine(0, 0, display.width() - 1, display.height() - 1, WHITE);
@@ -175,7 +76,7 @@ void DraweLine(void) {
 }
 
 void DrawRectangle(void) {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
 
     display.drawRect(100, 10, 20, 20, WHITE);
@@ -188,7 +89,7 @@ void DrawRectangle(void) {
 }
 
 void DrawCircle(void) {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
     display.drawCircle(60, 30, 30, WHITE);
     display.fillCircle(50, 20, 5, WHITE);
@@ -199,7 +100,7 @@ void DrawCircle(void) {
 }
 
 void DrawTriangle() {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
     display.drawTriangle(24, 1, 3, 55, 45, 55, WHITE);
     display.fillTriangle(104, 62, 125, 9, 83, 9, WHITE);
@@ -209,7 +110,7 @@ void DrawTriangle() {
 }
 
 void WriteTextTeam() {
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.clearDisplay();
     // display.setCursor(10,10);
     display.setTextSize(2);
@@ -220,14 +121,14 @@ void WriteTextTeam() {
     printf("WriteTexth3pd041121\n");
 }
 
+
 // Erklæring af en prototype for en funktion pointer. Funktions pointeren kan bruges til funktioner, der okke tager imod nogle parametre og ikke returnerer
 // en parameter.
 // Skal man drage en parallel til en funktions pointer i C indenfor C# verdenen, vil der være tale om en Delegate.
 typedef void (*DisplayFunctionPointer)();
 
 // En tabel af funktions pointere af typen beskerevet lige herover.
-DisplayFunctionPointer DisplayFunctionPointerTable[] =
-{
+DisplayFunctionPointer DisplayFunctionPointerTable[] = {
     &ClearScreen,
     &WriteText,
     &DraweLine,
@@ -236,21 +137,25 @@ DisplayFunctionPointer DisplayFunctionPointerTable[] =
     &DrawTriangle,
     &WriteTextTeam
 };
+#endif  // CYCLE_DISPLAY
+
+
 
 void setup(void) {
     USE_SERIAL.begin(9600);
 
-#ifdef Display_Attached
+#ifdef DISPLAY_ATTACHED
     display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
     display.clearDisplay();
     display.setTextColor(WHITE);
 #endif
 
+#ifdef CYCLE_DISPLAY
     StartMillis = millis(); // initial start time
 
     (*DisplayFunctionPointerTable[0])(); // Start med den første funktion i vores Funktion Pointer Tabel så vi ikke starter med et tomt Display, hvis vi har et Display tilkoblet !!!
+#endif  // CYCLE_DISPLAY
 
-    // put your setup code here, to run once:
     pinMode(LED, OUTPUT);
 #if defined USE_AVR_DEBUGGER
     debug_init();
@@ -258,87 +163,18 @@ void setup(void) {
     delay(3000);
     USE_SERIAL.begin(115200);
 
-    LightTicker.start();
+    traffic_light_init();
+    dht_init();
+    display_init();
 
     // initialize digital pin LED_BUILTIN as an output.
-    pinMode(50, OUTPUT);
-    pinMode(51, OUTPUT);
-    pinMode(52, OUTPUT);
-
-    pinMode(BUTTON_INTERRUPT_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(BUTTON_INTERRUPT_PIN), display_irq_cnt, RISING); // trigger when button pressed, but not when released.
-}
-
-bool isNumeric(const char *s, int len) {
-
-    while (*s && len--)
-    {
-        if (*s < '0' || *s > '9')
-            return false;
-        ++s;
-    }
-    return true;
-}
-
-void handle_light_period(void) {
-
-    int num_chars = USE_SERIAL.available();
-    char buf[4] = {0};
-    buf[4] = '\0';
-    if (num_chars < 3)
-    {
-        return;
-    }
-
-    for (size_t i = 0; i < 3; i++)
-    {
-        buf[i] = USE_SERIAL.read(); // read one byte from serial buffer;
-    }
-
-    if (!isNumeric(&buf[1], 2))
-    {
-        return;
-    }
-
-    switch (buf[0]) {
-        case '0':
-            traffic_light.redlight_period = atoi(&buf[1]);
-            break;
-        case '1':
-            traffic_light.redyellowlight_period = atoi(&buf[1]);
-            break;
-        case '2':
-            traffic_light.greenlight_period = atoi(&buf[1]);
-            break;
-        case '3':
-            traffic_light.yellowlight_period = atoi(&buf[1]);
-            break;
-
-        default:
-            break;
-    }
 }
 
 void loop(void) {
 
-    if (interrupt_occurred)
-    {
-        interrupt_occurred = 0;
-        static unsigned int irq_cnt = 0;
-        irq_cnt++;
-
-        USE_SERIAL.printf("IRQ CNT : %d\n", irq_cnt);
-
-#ifdef Display_Attached
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setCursor(0, 16);
-        display.printf("IRQ CNT : %d\n", irq_cnt);
-        display.display();
-#endif
-    }
-
-    handle_light_period();
+    traffic_light_update();
+    dht_update();  // TODO Kevin: DHT22 seems to cause a button IRQ, maybe move to a different pin?
+    display_update();
 
 #ifdef CYCLE_DISPLAY
     CurrentMillis = millis(); // get the current time
@@ -360,5 +196,4 @@ void loop(void) {
     }
 #endif
 
-    LightTicker.update();
 }
