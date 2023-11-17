@@ -1,4 +1,8 @@
 
+#include "utils.hpp"
+
+#if USE_XBEE == 0
+
 #include <Arduino.h>
 
 #include <Ticker.h>
@@ -7,7 +11,6 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-#include "utils.hpp"
 #include "traffic_light.h"  // TODO Kevin: Include to get_irq_cnt(), should be refactored.
 #include "display.h"
 
@@ -96,4 +99,6 @@ volatile void display_hum_and_irq(void) {
     display.printf("HUM: %f°C\n", (double)relative_humidity);
     display.display();
 }
+#endif
+
 #endif

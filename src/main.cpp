@@ -1,10 +1,13 @@
 // #define USE_AVR_DEBUGGER
 
+#include "utils.hpp"
+
+#if USE_XBEE == 0
+
 #include <Arduino.h>
 
 #include <Ticker.h>
 
-#include "utils.hpp"
 #include "dht22.hpp"
 #include "traffic_light.h"
 #include "display.h"
@@ -197,3 +200,5 @@ void loop(void) {
 #endif
 
 }
+
+#endif

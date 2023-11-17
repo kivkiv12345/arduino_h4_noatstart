@@ -1,13 +1,13 @@
+#include "utils.hpp"
+
+#if USE_XBEE == 0
 
 #include <Arduino.h>
 
 #include <Ticker.h>
 
-#include "utils.hpp"
 
-#define REDLIGHT_PIN 52
-#define YELLOWLIGHT_PIN 50
-#define GREENLIGHT_PIN 51
+#include "traffic_light.h"
 
 #define BUTTON_INTERRUPT_PIN 3
 
@@ -195,3 +195,5 @@ int traffic_light_init(void) {
 
     return 0;
 }
+
+#endif

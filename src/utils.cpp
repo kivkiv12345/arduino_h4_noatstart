@@ -1,3 +1,7 @@
+#include "utils.hpp"
+
+#if USE_XBEE == 0
+
 #include <Arduino.h>
 
 #include <Wire.h>
@@ -16,4 +20,19 @@ bool isNumeric(const char *s, int len) {
         ++s;
     }
     return true;
+}
+
+#endif
+
+void flashLed(int pin, int times, int wait) {
+
+    for (int i = 0; i < times; i++) {
+      digitalWrite(pin, HIGH);
+      delay(wait);
+      digitalWrite(pin, LOW);
+
+      if (i + 1 < times) {
+        delay(wait);
+      }
+    }
 }

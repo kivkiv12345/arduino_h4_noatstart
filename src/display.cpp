@@ -1,9 +1,12 @@
 
+#include "utils.hpp"
+
+#if USE_XBEE == 0
+
 #include "display.h"
 
 #include <Ticker.h>
 
-#include "utils.hpp"
 
 #define DISPLAY_PERIOD 3000
 
@@ -75,3 +78,5 @@ int display_init(void) {
     DisplayTicker.start();
     return 0;
 }
+
+#endif
