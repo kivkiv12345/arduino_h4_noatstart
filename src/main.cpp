@@ -1,4 +1,4 @@
-// #define USE_AVR_DEBUGGER
+#define USE_AVR_DEBUGGER
 
 #include "utils.hpp"
 
@@ -146,6 +146,11 @@ DisplayFunctionPointer DisplayFunctionPointerTable[] = {
 
 void setup(void) {
     USE_SERIAL.begin(9600);
+
+#ifdef USE_AVR_DEBUGGER
+    debug_init();
+    delay(3000);
+#endif
 
 #ifdef DISPLAY_ATTACHED
     display.begin(SSD1306_SWITCHCAPVCC, 0x3C);

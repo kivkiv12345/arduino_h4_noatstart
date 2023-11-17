@@ -945,9 +945,15 @@ void debug_init(void)
 #endif
 
 #if ((AVR8_USE_TIMER0_INSTEAD_OF_WDT == 1) || (AVR8_SWINT_SOURCE == -1)) && (AVR8_BREAKPOINT_MODE != 1)
- 	/* initialize the timer0 OC0A interrupt */
+	#if defined LTPE_USE_TIMER2_INSTEAD_OF_TIMER0  // LTPE Modified
+	/* initialize the timer2 OC2A interrupt */
+	OCR2A = 0x7F; /* raise an interrupt between two "millis" interrupts */
+ 	TIMSK2 |= _BV(OCIE2A); /* enable the interrupt */
+	#else
+	/* initialize the timer0 OC0A interrupt */
  	OCR0A = 0x7F; /* raise an interrupt between two "millis" interrupts */
- 	TIMSK0 |= _BV(OCIE0A); /* enable the interrupt */
+ 	TIMSK0 |= _BV(OCIE0A); /* enable the interrupt */ 
+	#endif
 #endif
 
 }
@@ -1052,10 +1058,17 @@ static inline void gdb_enable_swinterrupt()
 {
 
 #if (AVR8_SWINT_SOURCE == -1) /* Use TIMER0_COMPA interrupt */
+	#if defined LTPE_USE_TIMER2_INSTEAD_OF_TIMER0 /* Use Timer2_COMPA interrupt */
+		OCR2A = TCNT2;
+	/* The counter might have been advanced while writing to the register. So in order to
+         * gurantee an immediate match, one has to write again to the register */
+        OCR2A = TCNT2; 
+	#else
         OCR0A = TCNT0;
 	/* The counter might have been advanced while writing to the register. So in order to
          * gurantee an immediate match, one has to write again to the register */
         OCR0A = TCNT0; 
+	#endif
 #else
 	AVR8_SWINT_EICR &= AVR8_SWINT_SC;
 	/* The pin needs to be configured as output to allow us to set the
@@ -1074,8 +1087,13 @@ static inline void gdb_disable_swinterrupt()
 #if (AVR8_SWINT_SOURCE != -1)
 	EIMSK &= ~_BV(AVR8_SWINT_INTMASK);
 #else
-	OCR0A = TCNT0 + 0x7F; /* next IRQ in 500 usec */
-	TIFR0 |= _BV(OCF0A);  /* clear compare flag */ 
+	#if defined LTPE_USE_TIMER2_INSTEAD_OF_TIMER0 /* Use Timer2_COMPA interrupt */
+		OCR2A = TCNT2 + 0x7F; /* next IRQ in 500 usec */
+		TIFR2 |= _BV(OCF2A);  /* clear compare flag */ 
+	#else
+		OCR0A = TCNT0 + 0x7F; /* next IRQ in 500 usec */
+		TIFR0 |= _BV(OCF0A);  /* clear compare flag */ 
+	#endif
 #endif
 }
 
@@ -2009,7 +2027,7 @@ ISR(UART_ISR_VECTOR, ISR_BLOCK ISR_NAKED)
 
 	/* Sets interrupt flag = interrupts enabled; but not in real, just in the stored value */
 	/* asm volatile ("ori r29, 0x80");	*/ /* user must see interrupts enabled */
-	/* Disabled - I don't know why th euser should see it enabled... */
+	/* Disabled - I don't know why the user should see it enabled... */
 	save_regs2 ();
 
 	
@@ -2260,7 +2278,12 @@ void debug_message(const char* msg)
  * instead of the separate single-stepping ISR defined above, if AVR8_SWINT_SOURCE == -1 */
 #if ( (AVR8_BREAKPOINT_MODE == 0) || (AVR8_BREAKPOINT_MODE == 2) )	/* code is for flash BP only */
 #if (AVR8_USE_TIMER0_INSTEAD_OF_WDT == 1)
-ISR(TIMER0_COMPA_vect, ISR_BLOCK ISR_NAKED)
+	#if defined LTPE_USE_TIMER2_INSTEAD_OF_TIMER0 // LTPE Modified
+	ISR(TIMER2_COMPA_vect, ISR_BLOCK ISR_NAKED)
+	#else
+	ISR(TIMER0_COMPA_vect, ISR_BLOCK ISR_NAKED)
+	#endif
+
 #else
 ISR(WDT_vect, ISR_BLOCK ISR_NAKED)
 #endif

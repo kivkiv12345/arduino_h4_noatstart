@@ -85,6 +85,12 @@
 extern "C" {
 #endif
 
+/* ------ LTPE Configuration ---------- */
+/** Set the define below to use Timer 2 instead of Timer 0, if AVR8_USE_TIMER0_INSTEAD_OF_WDT 
+ *  is set to the value 1, i.e. timer interrupt is used instead os Watchdog Interrupt.
+ * 
+ * */
+#define LTPE_USE_TIMER2_INSTEAD_OF_TIMER0 
 
 /*  --------- Configuration ------------ */
 /** AVR8_BREAKPOINT_MODE
@@ -116,7 +122,7 @@ extern "C" {
  *
  * */
 #ifndef	AVR8_BREAKPOINT_MODE
-	#define	AVR8_BREAKPOINT_MODE	(1)
+	#define	AVR8_BREAKPOINT_MODE	(2)
 #endif
 
 /** AVR8_USE_TIMER0_INSTEAD_OF_WDT
@@ -136,7 +142,7 @@ extern "C" {
  *
  * */
 #ifndef AVR8_USE_TIMER0_INSTEAD_OF_WDT
-        #define AVR8_USE_TIMER0_INSTEAD_OF_WDT (0)
+        #define AVR8_USE_TIMER0_INSTEAD_OF_WDT (1)
 #endif
 #if AVR8_BREAKPOINT_MODE == 1
        #undef AVR8_USE_TIMER0_INSTEAD_OF_WDT
@@ -192,7 +198,7 @@ extern "C" {
  */
   
 #ifndef	AVR8_SWINT_SOURCE
-	#define	AVR8_SWINT_SOURCE	(0)
+	#define	AVR8_SWINT_SOURCE	(-1)
 #endif
 
 
@@ -240,7 +246,7 @@ extern "C" {
  * don't put it into parentheses.
  */
 #ifndef AVR8_UART_NUMBER
-        #define AVR8_UART_NUMBER       0
+        #define AVR8_UART_NUMBER       3
 #endif
 
 /**

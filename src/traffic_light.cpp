@@ -11,6 +11,10 @@
 
 #define BUTTON_INTERRUPT_PIN 3
 
+#define REDLIGHT_PBPIN PB1
+#define YELLOWLIGHT_PBPIN PB2
+#define GREENLIGHT_PBPIN PB3
+
 enum light_states_e
 {
     RED_LIGHT = 0,
@@ -49,9 +53,12 @@ void light_state_machine(void) {
     switch (traffic_light.current_state) {
         case RED_LIGHT:
 
-            digitalWrite(REDLIGHT_PIN, 1);
-            digitalWrite(YELLOWLIGHT_PIN, 0);
-            digitalWrite(GREENLIGHT_PIN, 0);
+            PORTB |= (1<<REDLIGHT_PBPIN);  // Turn on
+            PORTB &= ~((1<<YELLOWLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // Turn off
+
+            //digitalWrite(REDLIGHT_PIN, 1);
+            //digitalWrite(YELLOWLIGHT_PIN, 0);
+            //digitalWrite(GREENLIGHT_PIN, 0);
 
             if (traffic_light.time_in_state > traffic_light.redlight_period)
             {
@@ -62,9 +69,12 @@ void light_state_machine(void) {
             break;
         case REDYELLOW_LIGHT:
 
-            digitalWrite(REDLIGHT_PIN, 1);
-            digitalWrite(YELLOWLIGHT_PIN, 1);
-            digitalWrite(GREENLIGHT_PIN, 0);
+            PORTB |= (1<<REDLIGHT_PBPIN)|(1<<YELLOWLIGHT_PBPIN);  // Turn on
+            PORTB &= ~((1<<GREENLIGHT_PBPIN));  // Turn off
+
+            //digitalWrite(REDLIGHT_PIN, 1);
+            //digitalWrite(YELLOWLIGHT_PIN, 1);
+            //digitalWrite(GREENLIGHT_PIN, 0);
 
             if (traffic_light.time_in_state > traffic_light.redyellowlight_period)
             {
@@ -75,9 +85,12 @@ void light_state_machine(void) {
             break;
         case GREEN_LIGHT:
 
-            digitalWrite(REDLIGHT_PIN, 0);
-            digitalWrite(YELLOWLIGHT_PIN, 0);
-            digitalWrite(GREENLIGHT_PIN, 1);
+            PORTB |= (1<<GREENLIGHT_PBPIN);  // Turn on
+            PORTB &= ~((1<<REDLIGHT_PBPIN)|(1<<YELLOWLIGHT_PBPIN));  // Turn off
+
+            //digitalWrite(REDLIGHT_PIN, 0);
+            //digitalWrite(YELLOWLIGHT_PIN, 0);
+            //digitalWrite(GREENLIGHT_PIN, 1);
 
             if (traffic_light.time_in_state > traffic_light.greenlight_period)
             {
@@ -90,9 +103,12 @@ void light_state_machine(void) {
         default:
         case YELLOW_LIGHT:
 
-            digitalWrite(REDLIGHT_PIN, 0);
-            digitalWrite(YELLOWLIGHT_PIN, 1);
-            digitalWrite(GREENLIGHT_PIN, 0);
+            PORTB |= (1<<YELLOWLIGHT_PBPIN);  // Turn on
+            PORTB &= ~((1<<REDLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // Turn off
+
+            //digitalWrite(REDLIGHT_PIN, 0);
+            //digitalWrite(YELLOWLIGHT_PIN, 1);
+            //digitalWrite(GREENLIGHT_PIN, 0);
 
             if (traffic_light.time_in_state > traffic_light.yellowlight_period)
             {
