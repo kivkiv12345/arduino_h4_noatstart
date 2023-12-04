@@ -1,0 +1,49 @@
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+from serial import Serial
+import serial
+
+# Serial port configuration
+serial_port = Serial('COM9', 115200)  # Adjust COM port and baud rate
+
+class Window(Frame):
+    def __init__(self):
+        tk.Frame.__init__(self)
+        self.pack()
+        self.master.title("Lightning McClean")
+        self.button1 = Button(self, text="CLICK HERE", width=30, height=10, command=self.new_window)
+        self.button1.grid(row=0, column=1, columnspan=2, sticky=W + E + N + S)
+
+    def new_window(self):
+        try:
+            #0 - red
+            #1 - red_yellow
+            #2 - green
+            #3 - yellow
+            # "210" - 2 is the light, 10 is seconds
+            serial_port.write(b"001")
+            serial_port.write(b"199")
+            serial_port.write(b"299")
+            serial_port.write(b"399")
+            print(serial_port.readline())
+        except Exception as e:
+            print(f"Error writing to serial port: {e}")
+        self.newWindow = Window2()
+
+class Window2(Frame):     
+    def __init__(self):
+        new =tk.Frame.__init__(self)
+        new = Toplevel(self)
+        new.title("McClean")
+        new.button = tk.Button(  text = "PRESS TO CLOSE", width = 25,
+                                 command = self.close_window )
+        new.button.pack()
+    def close_window(self):
+        self.destroy()
+
+def main():
+    Window().mainloop()
+
+if __name__ == '__main__':
+    main()
