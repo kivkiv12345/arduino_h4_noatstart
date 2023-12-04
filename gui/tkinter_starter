@@ -5,15 +5,33 @@ from serial import Serial
 import serial
 
 # Serial port configuration
-serial_port = Serial('COM9', 115200)  # Adjust COM port and baud rate
+serial_port = Serial('COM9', 115200, timeout=1)  # Adjust COM port and baud rate
 
 class Window(Frame):
     def __init__(self):
         tk.Frame.__init__(self)
         self.pack()
         self.master.title("Lightning McClean")
-        self.button1 = Button(self, text="CLICK HERE", width=30, height=10, command=self.new_window)
-        self.button1.grid(row=0, column=1, columnspan=2, sticky=W + E + N + S)
+
+        # Configure grid row and column weights
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        # Configure styles
+        style = ttk.Style()
+        style.configure('TFrame', background='#ECECEC')  # Set background color
+        style.configure('TButton', padding=(10, 5), font=('Arial', 12))  # Set padding and font
+
+        # Create a frame with style
+        frame = ttk.Frame(self, style='TFrame')
+        frame.grid(row=0, column=0, columnspan=2, sticky='nsew')
+
+
+        # Create a button with style
+        self.button1 = ttk.Button(self, text="CLICK HERE", command=self.new_window)
+        self.button1.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
+
 
     def new_window(self):
         try:
@@ -23,9 +41,9 @@ class Window(Frame):
             #3 - yellow
             # "210" - 2 is the light, 10 is seconds
             serial_port.write(b"001")
-            serial_port.write(b"199")
-            serial_port.write(b"299")
-            serial_port.write(b"399")
+            #serial_port.write(b"102")
+            serial_port.write(b"203")
+            serial_port.write(b"304")
             print(serial_port.readline())
         except Exception as e:
             print(f"Error writing to serial port: {e}")

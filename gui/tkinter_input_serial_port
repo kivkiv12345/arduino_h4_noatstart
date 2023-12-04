@@ -1,0 +1,79 @@
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+from serial import Serial
+import serial
+
+# Serial port configuration
+serial_port = Serial('COM9', 115200, timeout=1)  # Adjust COM port and baud rate
+
+class Window(tk.Frame):
+    def __init__(self):
+        tk.Frame.__init__(self)
+        self.pack()
+        self.master.title("Traffic Lights")
+
+        # Set the initial size of the window
+        self.master.geometry("400x200")
+        self.master.configure(bg='#00ff7f')
+
+        # Configure grid row and column weights
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+
+        # Configure styles
+        style = ttk.Style()
+        style.configure('TFrame', background='#00ff7f')  # Set background color
+        style.configure('TButton', padding=(10, 5), font=('Monospace Text', 12))  # Set padding and font
+
+        #tk.Label(self, text="Output Log").grid(column=0, row=1)
+
+        # Create a frame with style
+        frame = ttk.Frame(self, style='TFrame')
+        frame.grid(row=0, column=0, columnspan=2, sticky='nsew')
+
+        # Create a label
+        label = ttk.Label(frame, text="Example: 199 (bit + time)", font=('Arial', 11), background='#00ff7f')
+        label.grid(row=0, column=0, padx=10, pady=10, sticky='w')
+
+        label2 = ttk.Label(frame, text="(0 - red) (1 - red_yellow) (2 - green) (3 - yellow)", font=('Arial', 11), background='#00ff7f', foreground='#000000')
+        label2.grid(row=3, column=0, padx=10, pady=5, sticky='w')
+
+        # Create an entry widget for user input
+        self.entry_var = tk.StringVar()
+        entry = ttk.Entry(frame, textvariable=self.entry_var, font=('Arial', 12))
+        entry.grid(row=1, column=0, padx=10, pady=10, sticky='nsew')
+
+        # Create a button with style
+        self.button1 = ttk.Button(frame, text="Send to Serial Port", command=self.new_window)
+        self.button1.grid(row=2, column=0, padx=10, pady=10, sticky='nsew')
+
+    def new_window(self):
+        try:
+            # Read user input from entry widget
+            user_input = self.entry_var.get()
+
+            # Send user input to the serial port
+            serial_port.write(user_input.encode())
+
+            # Print the response from the serial port
+            response = serial_port.readline().decode()
+            print(response)
+        except Exception as e:
+            print(f"Error communicating with the serial port: {e}")
+
+        # Open a new window (you can customize this part as needed)
+        self.newWindow = Window2()
+
+class Window2(tk.Toplevel):
+    def __init__(self):
+        tk.Toplevel.__init__(self)
+        self.title("McClean")
+
+def main():
+    app = Window()
+    app.mainloop()
+
+if __name__ == '__main__':
+    main()
