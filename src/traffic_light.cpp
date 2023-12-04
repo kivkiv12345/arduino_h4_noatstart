@@ -53,8 +53,8 @@ void light_state_machine(void) {
     switch (traffic_light.current_state) {
         case RED_LIGHT:
 
-            PORTB |= (1<<REDLIGHT_PBPIN);  // Turn on
-            PORTB &= ~((1<<YELLOWLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // Turn off
+            PORTB |= (1<<REDLIGHT_PBPIN);  // | Turn on
+            PORTB &= ~((1<<YELLOWLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // & ~ Turn off
 
             //digitalWrite(REDLIGHT_PIN, 1);
             //digitalWrite(YELLOWLIGHT_PIN, 0);
@@ -120,7 +120,7 @@ void light_state_machine(void) {
     }
 }
 
-Ticker LightTicker(light_state_machine, 1000);
+Ticker LightTicker(light_state_machine, 10);
 
 void handle_light_period(void) {
 
