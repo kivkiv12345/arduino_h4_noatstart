@@ -172,7 +172,7 @@ void setup(void) {
     USE_SERIAL.begin(115200);
 
     traffic_light_init();
-    dht_init();
+    //dht_init();
     display_init();
 
     // initialize digital pin LED_BUILTIN as an output.
@@ -181,7 +181,7 @@ void setup(void) {
 void loop(void) {
 
     traffic_light_update();
-    dht_update();  // TODO Kevin: DHT22 seems to cause a button IRQ, maybe move to a different pin?
+    //dht_update();  // TODO Kevin: DHT22 seems to cause a button IRQ, maybe move to a different pin?
     display_update();
 
 #ifdef CYCLE_DISPLAY
