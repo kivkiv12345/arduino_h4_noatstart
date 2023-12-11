@@ -173,6 +173,7 @@ static void traffic_light_uart_protocol(void) {
         default:
             break;
     }
+    USE_SERIAL.printf("%s", buf);
 }
 
 static unsigned int irq_cnt = 0;
