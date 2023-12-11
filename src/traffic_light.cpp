@@ -213,9 +213,14 @@ int traffic_light_update(void) {
 int traffic_light_init(void) {
 
     // Set traffic light LED pins to output.
-    pinMode(50, OUTPUT);
-    pinMode(51, OUTPUT);
-    pinMode(52, OUTPUT);
+    //pinMode(50, OUTPUT);
+    //pinMode(51, OUTPUT);
+    //pinMode(52, OUTPUT);
+
+    // Set pins 50, 51, and 52 as OUTPUT
+    DDRC |= (1 << DDC2);
+    DDRB |= (1 << DDB1) | (1 << DDB2) | (1 << DDB3);
+    
 #ifndef USE_TIMER_ISR
     LightTicker.start();
 #else
