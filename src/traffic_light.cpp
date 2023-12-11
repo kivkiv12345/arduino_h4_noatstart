@@ -132,6 +132,7 @@ ISR(TIMER4_COMPA_vect){//timer1 interrupt 1Hz toggles pin 13 (LED)
 }
 #endif
 
+static void traffic_light_uart_protocol(void) {
 
     int num_chars = USE_SERIAL.available();
     char buf[4] = {0};
@@ -181,7 +182,7 @@ int get_irq_cnt(void) {
 
 int traffic_light_update(void) {
 
-    handle_light_period();
+    traffic_light_uart_protocol();
 
 #ifndef USE_TIMER_ISR
     LightTicker.update();
