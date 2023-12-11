@@ -218,12 +218,13 @@ int traffic_light_init(void) {
 #ifndef USE_TIMER_ISR
     LightTicker.start();
 #else
-    cli();//stop interrupts
+    // Setup copied from: https://forum.arduino.cc/t/any-timer-interrupt-examples-for-mega2560/601225/2
+    cli(); //stop interrupts
 
-    //set timer4 interrupt at 1Hz
+    // set timer4 interrupt at 1Hz
     TCCR4A = 0;// set entire TCCR1A register to 0
     TCCR4B = 0;// same for TCCR1B
-    TCNT4  = 0;//initialize counter value to 0
+    TCNT4  = 0;// initialize counter value to 0
     // set compare match register for 1hz increments
     OCR4A = 15624/1;// = (16*10^6) / (1*1024) - 1 (must be <65536)
     // turn on CTC mode
