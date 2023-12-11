@@ -49,6 +49,7 @@ class Window(tk.Frame):
 
         ######### ---> IN PROGRESS <--- #########
 
+        # Doesnt show the right info - protocol?
         # Create a label to show the state of a bit
         self.bit_state_label = ttk.Label(frame, text="Bit State: N/A", font=('Arial', 11),
                                          background='#878aff', foreground='#000000')
