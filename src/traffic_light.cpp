@@ -119,7 +119,14 @@ ISR(TIMER4_COMPA_vect) {
     light_state_machine();
 }
 
+/**
+ * @brief Reads from serial and allows the user to affect the timing of the traffic light.
+ */
 static void traffic_light_uart_protocol(void) {
+
+    /* The protocol reads 3 characters from serial,
+        the first character determines which light/state to affect.
+        The next two characters determines the duration of the state in seconds. */
 
     int num_chars = USE_SERIAL.available();
     char buf[4] = {0};
@@ -163,6 +170,7 @@ static void traffic_light_uart_protocol(void) {
     USE_SERIAL.printf("%s", buf);
 }
 
+/* The assignment requires us to allow the DHT22 to display the interrupt count. */
 static unsigned int irq_cnt = 0;
 int get_irq_cnt(void) {
     return irq_cnt;
