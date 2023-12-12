@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "portbits.h"
 
 #if USE_XBEE == 0
 
@@ -11,9 +12,10 @@
 
 #define BUTTON_INTERRUPT_PIN 3
 
-#define REDLIGHT_PBPIN PB1
-#define YELLOWLIGHT_PBPIN PB2
-#define GREENLIGHT_PBPIN PB3
+// TODO Kevin: Can we somehow create a #define that map PBx to BIT_CONF() bits?
+#define REDLIGHT_BIT bit1       // PB1
+#define YELLOWLIGHT_BIT bit2    // PB2
+#define GREENLIGHT_BIT bit3     // PB3
 
 #define USE_TIMER_ISR 1
 
@@ -55,12 +57,9 @@ void light_state_machine(void) {
     switch (traffic_light.current_state) {
         case RED_LIGHT:
 
-            PORTB |= (1<<REDLIGHT_PBPIN);  // | Turn on
-            PORTB &= ~((1<<YELLOWLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // & ~ Turn off
-
-            //digitalWrite(REDLIGHT_PIN, 1);
-            //digitalWrite(YELLOWLIGHT_PIN, 0);
-            //digitalWrite(GREENLIGHT_PIN, 0);
+            BIT_CONF(PORTB)->REDLIGHT_BIT    = 1;  // PB1
+            BIT_CONF(PORTB)->YELLOWLIGHT_BIT = 0;  // PB2
+            BIT_CONF(PORTB)->GREENLIGHT_BIT  = 0;  // PB3
 
             if (traffic_light.time_in_state > traffic_light.redlight_period)
             {
@@ -71,12 +70,9 @@ void light_state_machine(void) {
             break;
         case REDYELLOW_LIGHT:
 
-            PORTB |= (1<<REDLIGHT_PBPIN)|(1<<YELLOWLIGHT_PBPIN);  // Turn on
-            PORTB &= ~((1<<GREENLIGHT_PBPIN));  // Turn off
-
-            //digitalWrite(REDLIGHT_PIN, 1);
-            //digitalWrite(YELLOWLIGHT_PIN, 1);
-            //digitalWrite(GREENLIGHT_PIN, 0);
+            BIT_CONF(PORTB)->REDLIGHT_BIT    = 1;  // PB1
+            BIT_CONF(PORTB)->YELLOWLIGHT_BIT = 1;  // PB2
+            BIT_CONF(PORTB)->GREENLIGHT_BIT  = 0;  // PB3
 
             if (traffic_light.time_in_state > traffic_light.redyellowlight_period)
             {
@@ -87,12 +83,9 @@ void light_state_machine(void) {
             break;
         case GREEN_LIGHT:
 
-            PORTB |= (1<<GREENLIGHT_PBPIN);  // Turn on
-            PORTB &= ~((1<<REDLIGHT_PBPIN)|(1<<YELLOWLIGHT_PBPIN));  // Turn off
-
-            //digitalWrite(REDLIGHT_PIN, 0);
-            //digitalWrite(YELLOWLIGHT_PIN, 0);
-            //digitalWrite(GREENLIGHT_PIN, 1);
+            BIT_CONF(PORTB)->REDLIGHT_BIT    = 0;  // PB1
+            BIT_CONF(PORTB)->YELLOWLIGHT_BIT = 0;  // PB2
+            BIT_CONF(PORTB)->GREENLIGHT_BIT  = 1;  // PB3
 
             if (traffic_light.time_in_state > traffic_light.greenlight_period)
             {
@@ -105,12 +98,9 @@ void light_state_machine(void) {
         default:
         case YELLOW_LIGHT:
 
-            PORTB |= (1<<YELLOWLIGHT_PBPIN);  // Turn on
-            PORTB &= ~((1<<REDLIGHT_PBPIN)|(1<<GREENLIGHT_PBPIN));  // Turn off
-
-            //digitalWrite(REDLIGHT_PIN, 0);
-            //digitalWrite(YELLOWLIGHT_PIN, 1);
-            //digitalWrite(GREENLIGHT_PIN, 0);
+            BIT_CONF(PORTB)->REDLIGHT_BIT    = 0;  // PB1
+            BIT_CONF(PORTB)->YELLOWLIGHT_BIT = 1;  // PB2
+            BIT_CONF(PORTB)->GREENLIGHT_BIT  = 0;  // PB3
 
             if (traffic_light.time_in_state > traffic_light.yellowlight_period)
             {
