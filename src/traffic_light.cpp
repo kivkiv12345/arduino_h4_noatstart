@@ -112,16 +112,12 @@ void light_state_machine(void) {
     }
 }
 
-#ifndef USE_TIMER_ISR
-Ticker LightTicker(light_state_machine, 10);
-#else
 /**
  * @brief ISR to tick the traffic light state machine. Should run at 1Hz
  */
 ISR(TIMER4_COMPA_vect) {
     light_state_machine();
 }
-#endif
 
 static void traffic_light_uart_protocol(void) {
 
@@ -176,10 +172,6 @@ int traffic_light_update(void) {
 
     traffic_light_uart_protocol();
 
-#ifndef USE_TIMER_ISR
-    LightTicker.update();
-#endif
-
     if (interrupt_occurred) {
         interrupt_occurred = 0;
         irq_cnt++;
@@ -204,35 +196,31 @@ int traffic_light_update(void) {
 int traffic_light_init(void) {
 
     // Set traffic light LED pins to output.
-    //pinMode(50, OUTPUT);
-    //pinMode(51, OUTPUT);
-    //pinMode(52, OUTPUT);
-
     // Set pins 50, 51, and 52 as OUTPUT
     DDRC |= (1 << DDC2);
     DDRB |= (1 << DDB1) | (1 << DDB2) | (1 << DDB3);
     
-#ifndef USE_TIMER_ISR
-    LightTicker.start();
-#else
-    // Setup copied from: https://forum.arduino.cc/t/any-timer-interrupt-examples-for-mega2560/601225/2
-    cli(); //stop interrupts
+    {   // Configure TIMER4 interrupt
 
-    // set timer4 interrupt at 1Hz
-    TCCR4A = 0;  // set entire TCCR1A register to 0
-    TCCR4B = 0;  // same for TCCR1B
-    TCNT4  = 0;  // initialize counter value to 0
-    // set compare match register for 1hz increments
-    OCR4A = 15624/1;// = (16*10^6) / (1*1024) - 1 (must be <65536)
-    // turn on CTC mode
-    TCCR4B |= (1 << WGM12);
-    // Set CS12 and CS10 bits for 1024 prescaler
-    TCCR4B |= (1 << CS12) | (1 << CS10);  
-    // enable timer compare interrupt
-    TIMSK4 |= (1 << OCIE4A);
+        // Setup copied from: https://forum.arduino.cc/t/any-timer-interrupt-examples-for-mega2560/601225/2
+        cli(); //stop interrupts
 
-    sei();//allow interrupts
-#endif
+        // set timer4 interrupt at 1Hz
+        TCCR4A = 0;  // set entire TCCR1A register to 0
+        TCCR4B = 0;  // same for TCCR1B
+        TCNT4  = 0;  // initialize counter value to 0
+        // set compare match register for 1hz increments
+        OCR4A = 15624/1;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+        // turn on CTC mode
+        TCCR4B |= (1 << WGM12);
+        // Set CS12 and CS10 bits for 1024 prescaler
+        TCCR4B |= (1 << CS12) | (1 << CS10);  
+        // enable timer compare interrupt
+        TIMSK4 |= (1 << OCIE4A);
+
+        sei();//allow interrupts
+    }
+    
 
     pinMode(BUTTON_INTERRUPT_PIN, INPUT_PULLUP);
 
